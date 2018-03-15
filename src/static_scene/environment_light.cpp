@@ -57,6 +57,7 @@ void EnvironmentLight::save_probability_debug() {
 			img[4 * (j * w + i) + 3] = 255;
 			img[4 * (j * w + i) + 0] = 255 * marginal_y[j];
 			img[4 * (j * w + i) + 1] = 255 * conds_y[j * w + i];
+			img[4 * (j * w + i) + 2] = 0;
 		}
 	}
 
