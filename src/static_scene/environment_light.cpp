@@ -57,6 +57,7 @@ void EnvironmentLight::save_probability_debug() {
 			img[4 * (j * w + i) + 3] = 255;
 			img[4 * (j * w + i) + 0] = 255 * marginal_y[j];
 			img[4 * (j * w + i) + 1] = 255 * conds_y[j * w + i];
+			img[4 * (j * w + i) + 2] = 0;
 		}
 	}
 
@@ -99,15 +100,20 @@ Vector3D EnvironmentLight::theta_phi_to_dir(const Vector2D& theta_phi) const {
 }
 
 Spectrum EnvironmentLight::bilerp(const Vector2D& xy) const {
-	uint32_t w = envMap->w;
-	const std::vector<Spectrum>& data = envMap->data;
-	double x = xy.x, y = xy.y;
-	Spectrum ret;
-	for (int i = 0; i < 4; ++i)
-		ret += (i%2 ? x-floor(x) : ceil(x)-x) *
-			   (i/2 ? y-floor(y) : ceil(y)-y) *
-			   data[w * (floor(y) + i/2) + floor(x) + i%2];
-	return ret;
+	long right = lround(xy.x), left, v = lround(xy.y);
+	double u1 = right - xy.x + .5, v1;
+	if (right == 0 || right == envMap->w) {
+		left = envMap->w - 1;
+		right = 0;
+	} else left = right - 1;
+	if (v == 0) v1 = v = 1; else if (v == envMap->h) {
+		v = envMap->h - 1;
+		v1 = 0;
+	} else v1 = v - xy.y + .5;
+	auto bottom = envMap->w * v, top = bottom - envMap->w;
+	auto u0 = 1 - u1;
+	return (envMap->data[top + left] * u1 + envMap->data[top + right] * u0) * v1 +
+			(envMap->data[bottom + left] * u1 + envMap->data[bottom + right] * u0) * (1 - v1);
 }
 
 
